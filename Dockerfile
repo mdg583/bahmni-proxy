@@ -19,7 +19,7 @@ COPY resources/src.jpeg /usr/local/apache2/htdocs/src.jpeg
 RUN mkdir /var/cache/mod_proxy
 RUN rm -rf /usr/local/apache2/cgi-bin/test-cgi
 RUN rm -rf /usr/local/apache2/cgi-bin/printenv*
-	
+
 RUN apk add --update openssl && \
     rm -rf /var/cache/apk/*
 RUN cd /etc/ &&\
@@ -47,9 +47,15 @@ RUN python3 -m venv /opt/certbot/ &&\
 RUN mkdir -p /var/log/client-side-logs/ &&\
 	touch /var/log/client-side-logs/client-side.log &&\
 	chmod 777 /var/log/client-side-logs/client-side.log &&\
-	ln -s /usr/local/apache2/htdocs/client_side_logging /usr/lib/python3*/site-packages/ 
+	ln -s /usr/local/apache2/htdocs/client_side_logging /usr/lib/python3*/site-packages/
 
 RUN pip install Flask pyyaml==6.0.1 mod_wsgi --break-system-packages
 
 # Rename and move mod_wsgi module to apache2 modules
 RUN mv /usr/lib/python*/site-packages/mod_wsgi/server/mod_wsgi-*.so /usr/local/apache2/modules/mod_wsgi.so
+
+# Prepare systemdate script
+RUN apk add --no-cache bash
+RUN chmod a+x /usr/local/apache2/cgi-bin/systemdate \
+    && sed -i 's/#LoadModule cgid_module modules\/mod_cgid.so/LoadModule cgid_module modules\/mod_cgid.so/' /usr/local/apache2/conf/httpd.conf \
+    && sed -i 's/#LoadModule cgi_module modules\/mod_cgi.so/LoadModule cgi_module modules\/mod_cgi.so/' /usr/local/apache2/conf/httpd.conf
